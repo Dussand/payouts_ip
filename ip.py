@@ -28,10 +28,13 @@ with concDia:
         metabase['fecha_operacion'] = metabase['fecha operacion'].dt.date
         # Convertir a datetime
         metabase['fecha_operacion'] = pd.to_datetime(metabase['fecha_operacion'], format='%d-%m-%Y')
-        # Configurar en español
-        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
-        # Extraer el día del mes
-        metabase['dia_mes'] =  metabase['fecha_operacion'].dt.strftime('%A')
+        # Extraer el día del mes en español (sin usar locale)
+        dias_es = {
+        'Monday': 'Lunes', 'Tuesday': 'Martes', 'Wednesday': 'Miércoles',
+        'Thursday': 'Jueves', 'Friday': 'Viernes', 'Saturday': 'Sábado', 'Sunday': 'Domingo'
+        }
+        metabase['dia_mes'] = pd.to_datetime(metabase['fecha_operacion']).dt.strftime('%A').map(dias_es)
+
         #creamos una columna solo con la hora de operacion
         metabase['hora_operacion'] = metabase['fecha operacion'].dt.time
 
