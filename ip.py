@@ -72,71 +72,74 @@ with concDia:
         key = 'dia_bcp'
     )
 
-    if archivo_bcp is not None:
-        bcp = pd.read_excel(archivo_bcp, skiprows=7)
-        # Asegurar que 'Operación - Número' es tipo string
-        ##bcp['Operación - Número'] = bcp['Operación - Número'].astype(str)
-        # Función para clasificar según el prefijo
-        def clasificar_banco(codigo):
-            if codigo.startswith('A'):
-                return '(BCP) - Banco de Crédito del Perú'
-            elif codigo.startswith('YPP'):
-                return 'Yape'
-            else:
-                return ''
+    try:
+        if archivo_bcp is not None:
+            bcp = pd.read_excel(archivo_bcp, skiprows=7)
+            # Asegurar que 'Operación - Número' es tipo string
+            ##bcp['Operación - Número'] = bcp['Operación - Número'].astype(str)
+            # Función para clasificar según el prefijo
+            def clasificar_banco(codigo):
+                if codigo.startswith('A'):
+                    return '(BCP) - Banco de Crédito del Perú'
+                elif codigo.startswith('YPP'):
+                    return 'Yape'
+                else:
+                    return ''
+                
+            # Aplicar la función a la columna 'codigo'
+            bcp['banco'] = bcp['Descripción operación'].apply(clasificar_banco)
+
+            # Reemplazar cadenas vacías por NaN
+            bcp['banco'].replace('', pd.NA, inplace=True)
+
+            bcp.dropna(subset=['banco'], inplace=True)  
             
-        # Aplicar la función a la columna 'codigo'
-        bcp['banco'] = bcp['Descripción operación'].apply(clasificar_banco)
 
-        # Reemplazar cadenas vacías por NaN
-        bcp['banco'].replace('', pd.NA, inplace=True)
+            pivot_mb = bcp.pivot_table(
+                index = 'Fecha', columns='banco', values='Monto', aggfunc = ['sum', 'count']
+            )
 
-        bcp.dropna(subset=['banco'], inplace=True)  
-        
+            st.dataframe(pivot_mb, use_container_width=True)
+            # cruce_bcp = bcp[bcp['banco'] == '(BCP) - Banco de Crédito del Perú'][['Fecha', 'Operación - Hora', 'Monto', 'Operación - Número']]
+            # cruce_bcp = cruce_bcp.rename(columns={'Fecha':'fecha_operacion','Operación - Hora':'hora_operacion', 'Monto':'monto' ,'Operación - Número': 'num_op'})
+            # cruce_bcp['num_op'] = cruce_bcp['num_op'].astype(str).str.zfill(8)
+            # cruce_bcp['archivo'] = 'bcp'
+            # #st.dataframe(cruce_bcp, use_container_width=True)
 
-        pivot_mb = bcp.pivot_table(
-            index = 'Fecha', columns='banco', values='Monto', aggfunc = ['sum', 'count']
-        )
+            # #almacenamos el df exportado en csv para poder descargar y realizar el cruce 
+            # csv_bcp = cruce_bcp.to_csv(index=False).encode('utf-8')
 
-        st.dataframe(pivot_mb, use_container_width=True)
-        # cruce_bcp = bcp[bcp['banco'] == '(BCP) - Banco de Crédito del Perú'][['Fecha', 'Operación - Hora', 'Monto', 'Operación - Número']]
-        # cruce_bcp = cruce_bcp.rename(columns={'Fecha':'fecha_operacion','Operación - Hora':'hora_operacion', 'Monto':'monto' ,'Operación - Número': 'num_op'})
-        # cruce_bcp['num_op'] = cruce_bcp['num_op'].astype(str).str.zfill(8)
-        # cruce_bcp['archivo'] = 'bcp'
-        # #st.dataframe(cruce_bcp, use_container_width=True)
+            # #creamos el boto
+            # descargar_bcp = st.download_button(
+            #                 label= "Descargar cruce BCP",
+            #                 data= csv_bcp,
+            #                 file_name= f'bcp.csv'
+            # )
 
-        # #almacenamos el df exportado en csv para poder descargar y realizar el cruce 
-        # csv_bcp = cruce_bcp.to_csv(index=False).encode('utf-8')
+            # # Concatenar los DataFrames verticalmente
+            # df = pd.concat([cruce_mb, cruce_bcp], ignore_index=True)
 
-        # #creamos el boto
-        # descargar_bcp = st.download_button(
-        #                 label= "Descargar cruce BCP",
-        #                 data= csv_bcp,
-        #                 file_name= f'bcp.csv'
-        # )
+            # # Identificar duplicados en la columna 'num_op'
+            # df['duplicado'] = df['num_op'].duplicated(keep=False)
+            
+            # # Filtrar filas sin duplicados en 'num_op'
+            # sin_duplicados_df = df[~df['num_op'].duplicated(keep=False)]
 
-        # # Concatenar los DataFrames verticalmente
-        # df = pd.concat([cruce_mb, cruce_bcp], ignore_index=True)
-
-        # # Identificar duplicados en la columna 'num_op'
-        # df['duplicado'] = df['num_op'].duplicated(keep=False)
-        
-        # # Filtrar filas sin duplicados en 'num_op'
-        # sin_duplicados_df = df[~df['num_op'].duplicated(keep=False)]
-
-        # st.write("### Filas sin valores duplicados")
-        # st.dataframe(sin_duplicados_df)
+            # st.write("### Filas sin valores duplicados")
+            # st.dataframe(sin_duplicados_df)
 
 
-        # #almacenamos el df exportado en csv para poder descargar y realizar el cruce 
-        # csv_concat = sin_duplicados_df.to_csv(index=False).encode('utf-8')
+            # #almacenamos el df exportado en csv para poder descargar y realizar el cruce 
+            # csv_concat = sin_duplicados_df.to_csv(index=False).encode('utf-8')
 
-        # #creamos el boto
-        # descargar_bcp = st.download_button(
-        #                 label= "Descargar conciliacion del cierre",
-        #                 data= csv_concat,
-        #                 file_name= f'Conciliacion_cierre.csv'
-        # )
+            # #creamos el boto
+            # descargar_bcp = st.download_button(
+            #                 label= "Descargar conciliacion del cierre",
+            #                 data= csv_concat,
+            #                 file_name= f'Conciliacion_cierre.csv'
+            # )
+    except:
+        st.write('Revisa el formato del archivo BCP')
 
 
 
