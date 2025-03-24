@@ -139,7 +139,7 @@ with concDia:
             #                 file_name= f'Conciliacion_cierre.csv'
             # )
     except:
-        st.warning('Revisa el formato del archivo BCP')
+        st.error('Revisa el formato del archivo BCP')
 
 
 
