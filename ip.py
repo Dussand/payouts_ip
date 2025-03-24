@@ -24,6 +24,7 @@ with concDia:
         #filtramos el df por estado pagado y solo yape y bcp
         metabase = metabase[(metabase['estado'] == 'Pagado') & 
                             metabase['banco'].isin(['Yape', '(BCP) - Banco de Crédito del Perú'])]
+        
         #creamos una columna solo con la fecha de operacion
         metabase['fecha_operacion'] = metabase['fecha operacion'].dt.date
         # Convertir a datetime
@@ -156,15 +157,18 @@ with concCier:
         #filtramos el df por estado pagado y solo yape y bcp
         metabase_cierre = metabase_cierre[(metabase_cierre['estado'] == 'Pagado') & 
                             metabase_cierre['banco'].isin(['Yape', '(BCP) - Banco de Crédito del Perú'])]
-        #creamos una columna solo con la fecha de operacion
+        
+         #creamos una columna solo con la fecha de operacion
         metabase_cierre['fecha_operacion'] = metabase_cierre['fecha operacion'].dt.date
         # Convertir a datetime
         metabase_cierre['fecha_operacion'] = pd.to_datetime(metabase_cierre['fecha_operacion'], format='%d-%m-%Y')
-        # Configurar en español
-        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
-        # Extraer el día del mes
-        metabase_cierre['dia_mes'] =  metabase_cierre['fecha_operacion'].dt.strftime('%A')
-        #creamos una columna solo con la hora de operacion
+        # Extraer el día del mes en español (sin usar locale)
+        dias_es = {
+        'Monday': 'Lunes', 'Tuesday': 'Martes', 'Wednesday': 'Miércoles',
+        'Thursday': 'Jueves', 'Friday': 'Viernes', 'Saturday': 'Sábado', 'Sunday': 'Domingo'
+        }
+        metabase_cierre['dia_mes'] = pd.to_datetime(metabase_cierre['fecha_operacion']).dt.strftime('%A').map(dias_es)
+
         metabase_cierre['hora_operacion'] = metabase_cierre['fecha operacion'].dt.time
 
         metabase_cierre['ultimos_8'] = metabase_cierre['numero de operacion'].str[-8:]
