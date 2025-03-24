@@ -197,6 +197,8 @@ with concCier:
                         data= csv_meta,
                         file_name= f'metabase.csv'
         )
+    else: 
+        st.warning('Sube tu archivo')
 
     st.subheader('BCP')
     archivo_bcp_cierre = st.file_uploader(
@@ -272,6 +274,9 @@ with concCier:
                         data= csv_concat,
                         file_name= f'Conciliacion_cierre.csv'
         )
+
+    else: 
+        st.warning('Sube tu archivo')
 
 
 
