@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import locale
+import chardet
+import datetime
 
 st.title('CONCILIACIONES PAYOUT')
 
@@ -161,7 +163,7 @@ with concCier:
         metabase_cierre = metabase_cierre[(metabase_cierre['estado'] == 'Pagado') & 
                             metabase_cierre['banco'].isin(['Yape', '(BCP) - Banco de Crédito del Perú'])]
         
-         #creamos una columna solo con la fecha de operacion
+        #creamos una columna solo con la fecha de operacion
         metabase_cierre['fecha_operacion'] = metabase_cierre['fecha operacion'].dt.date
         # Convertir a datetime
         metabase_cierre['fecha_operacion'] = pd.to_datetime(metabase_cierre['fecha_operacion'], format='%d-%m-%Y')
@@ -174,18 +176,17 @@ with concCier:
 
         metabase_cierre['hora_operacion'] = metabase_cierre['fecha operacion'].dt.time
 
-        metabase_cierre['ultimos_8'] = metabase_cierre['numero de operacion'].str[-8:]
+        metabase_cierre['num_op'] = metabase_cierre['numero de operacion'].str[-8:]
 
-
+        #st.dataframe(metabase_cierre, use_container_width=True)
 
         pivot_mb_cierre = metabase_cierre.pivot_table(
             index = 'fecha_operacion', columns='banco', values='monto', aggfunc = ['sum', 'count']
-        )
+        ).reset_index()
 
         st.dataframe(pivot_mb_cierre, use_container_width=True)
 
-        cruce_mb = metabase_cierre[metabase_cierre['banco'] == '(BCP) - Banco de Crédito del Perú'][['fecha_operacion', 'hora_operacion', 'monto', 'ultimos_8']]
-        cruce_mb = cruce_mb.rename(columns={'ultimos_8': 'num_op'})
+        cruce_mb = metabase_cierre[metabase_cierre['banco'] == '(BCP) - Banco de Crédito del Perú'][['fecha_operacion', 'hora_operacion', 'monto', 'num_op', 'inv public_id']]
         # Formatear como 'DD/MM/YYYY' y convertir a object
         cruce_mb['fecha_operacion'] = cruce_mb['fecha_operacion'].dt.strftime('%d/%m/%Y')
         cruce_mb['archivo'] = 'metabase'
@@ -200,8 +201,7 @@ with concCier:
                         data= csv_meta,
                         file_name= f'metabase.csv'
         )
-    else: 
-        st.warning('Sube tu archivo')
+
 
     st.subheader('BCP')
     archivo_bcp_cierre = st.file_uploader(
@@ -234,7 +234,7 @@ with concCier:
       
         pivot_mb = bcp_cierre.pivot_table(
             index = 'Fecha', columns='banco', values='Monto', aggfunc = ['sum', 'count']
-        )
+        ).reset_index()
 
         st.dataframe(pivot_mb, use_container_width=True)
         cruce_bcp = bcp_cierre[bcp_cierre['banco'] == '(BCP) - Banco de Crédito del Perú'][['Fecha', 'Operación - Hora', 'Monto', 'Operación - Número']]
@@ -278,8 +278,43 @@ with concCier:
                         file_name= f'Conciliacion_cierre.csv'
         )
 
-    else: 
-        st.warning('Sube tu archivo')
+    #     st.header('Subir archivo metabase dias anteriores')
+    #     st.write('''
+                 
+    #              Para poder analizar de manera mas precisa los duplicados se recomienda, en el filtro de fechas,
+    #              colocar una semana completa, del dia de hoy a 7 dias anteriores. 
+                 
+    #              ''')
+    #     archivo_metabase_semana= st.file_uploader(
+    #     "Subir excel de las operaciones de toda la semana: ", type = ['xlsx', 'xls'],
+    #     key = 'metabase_semana'
+    # )
+        
+    #     if archivo_metabase_semana is not None:
+    #         semana_meta = pd.read_excel(archivo_metabase_semana)
+    #         #filtramos el df por estado pagado y solo yape y bcp
+    #         semana_meta = semana_meta[(semana_meta['estado'] == 'Pagado') & 
+    #                         semana_meta['banco'].isin(['(BCP) - Banco de Crédito del Perú'])]
+    #         semana_meta['num_op'] = semana_meta['numero de operacion'].str.slice(18,27) #agregamos un fila con el numero de operacion extraido de la columna 'numero de operacion'
+            
+    #         #utilizaaremos la funcion date para en el siguiente paso filtrar por dia que dejo operaciones 
+    #         hoy = datetime.date.today() 
+    #         hoy_menos_dos = hoy - datetime.timedelta(days=2) #para filtra por el dia a conciliar
+    #         hoy_format = hoy_menos_dos.strftime("%d/%m/%Y") #cambiamos el formato al que tiene el archivo de conciliacion
+    #         hoy_format_str = str(hoy_format) #lo convertimos a string
+    #         #creamos una tabla filtrado por el dia a conciliar
+    #         filtra_sin_duplicados_df = sin_duplicados_df[sin_duplicados_df['fecha_operacion'] == hoy_format_str]
 
-
-
+    #         #filtramos las filas que contienen el mismo numero de operacion en ambas tablas (filtra_sin_duplicados_df y semana_meta)
+    #         coincidencias = filtra_sin_duplicados_df[filtra_sin_duplicados_df['num_op'].isin(semana_meta['num_op'])]
+    #         # Mostrar los resultados en Streamlit
+    #         if len(coincidencias) == len(filtra_sin_duplicados_df): #si ambos tienen las mismas operaciones
+    #             hoy_menos_uno = hoy - datetime.timedelta(days=1)
+    #             hoy_format_uno = hoy_menos_uno.strftime("%d/%m/%Y")
+    #             hoy_format_str_uno = str(hoy_format_uno)
+    #             st.success(f"CONCILIACION {hoy_format_str_uno} COMPLETADA") #conciliacion dia anterior completa 
+    #             st.dataframe(filtra_sin_duplicados_df)
+    #         else:
+    #             st.error('Analizar manualmente')
+    #             inconsistencias = filtra_sin_duplicados_df[~filtra_sin_duplicados_df['num_op'].isin(semana_meta['num_op'])]
+    #             st.dataframe(filtra_sin_duplicados_df, use_container_width=True)
