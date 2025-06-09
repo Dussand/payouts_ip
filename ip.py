@@ -409,7 +409,7 @@ with concVal:
 
 
          
-        st.subheader('Busqueda general de validaciones')
+        #st.subheader('Busqueda general de validaciones')
         # st.write('''
         #          Esta tabla contiene las validaciones de pagos de ALFIN y BCP, 
         #          puedes buscar por fecha, hora, referencia, importe, numero de operacion o clave.
