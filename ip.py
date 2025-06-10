@@ -375,14 +375,14 @@ with concVal:
         #reemplazamos los espacios en blanco por nada para que no afecte al cruce
         eecc_val_df_bcp['Descripción operación'] = eecc_val_df_bcp['Descripción operación'].str.replace(' ', '', regex=True)
         #extraer el numero de operacion de la columna 'Referencia' quitandole el 0 a la izquierda
-        eecc_val_df_bcp['num_op'] = eecc_val_df_bcp['Descripción operación'].str.extract(r'(\d{8})')
+        eecc_val_df_bcp['num_op'] = eecc_val_df_bcp['Descripción operación'].str.extract(r'(\d{11})')
         eecc_val_df_bcp['Monto'] = eecc_val_df_bcp['Monto'] * -1
         #adaptamos una clave unica junto con el numero de operacion y el monto
         eecc_val_df_bcp['monto_str'] = eecc_val_df_bcp['Monto'].astype(str).str.replace('.', '', regex=False)  # Convertir a string y quitar el punto decimal
 
         eecc_val_df_bcp['clave'] = eecc_val_df_bcp['num_op'] + eecc_val_df_bcp['monto_str'].str[:2] 
 
-        #st.dataframe(eecc_val_df_bcp, use_container_width=True)
+        st.dataframe(eecc_val_df_bcp, use_container_width=True)
 
         st.subheader('Validar números de operación de BCP')        
         num_op_input_bcp = st.text_area(
